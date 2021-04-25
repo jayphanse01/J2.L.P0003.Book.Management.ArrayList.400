@@ -5,6 +5,16 @@
  */
 package tubt.view;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Vector;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import tubt.daos.BookDAO;
+import tubt.dtos.BookDTO;
+import tubt.utils.Constants;
+
 /**
  *
  * @author buith
@@ -14,8 +24,69 @@ public class MainView extends javax.swing.JFrame {
     /**
      * Creates new form MainView
      */
+    DefaultTableModel tblBookModel;
+    DefaultTableModel tblSearchBookModel;
+    DefaultComboBoxModel defaultCBBModel = new DefaultComboBoxModel();
+    boolean addOrUpdateStatus = false;
+
     public MainView() {
         initComponents();
+        showBookTable();
+        setPublishedYearForCBB();
+    }
+
+    private void showBookTable() {
+        try {
+            tblBookModel = new DefaultTableModel(new String[]{"Book ID", "Book Name", "Author", "Publisher", "Published Year", "For Rent"}, 0) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false; // or a condition at your choice with row and column
+                }
+            };
+            tblBook.setModel(tblBookModel);
+            tblBook.updateUI();
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Cannot create book table!");
+        }
+    }
+
+    private void getAllBook(ArrayList<BookDTO> bookList) {
+        if (bookList.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No book in list!");
+        } else {
+            tblBookModel.getDataVector().removeAllElements();
+            tblBook.clearSelection();
+            for (BookDTO dto : bookList) {
+                Vector bookData = new Vector();
+                String bookID = dto.getBookID();
+                String bookName = dto.getBookName();
+                String author = dto.getAuthor();
+                String publisher = dto.getPublisher();
+                int publishedYear = dto.getPublishedYear();
+                boolean forRent = dto.isForRent();
+                bookData.add(bookID);
+                bookData.add(bookName);
+                bookData.add(author);
+                bookData.add(publisher);
+                bookData.add(publishedYear);
+                bookData.add(forRent);
+                tblBookModel.addRow(bookData);
+            }
+            tblBook.setModel(tblBookModel);
+            tblBook.updateUI();
+        }
+    }
+
+    private void setPublishedYearForCBB() {
+        LocalDate date = LocalDate.now();
+        int thisYear = date.getYear();
+        System.out.println(thisYear);
+
+        for (int i = 1900; i <= thisYear; i++) {
+            defaultCBBModel.addElement(i);
+        }
+        cbbPublishedYear.setModel(defaultCBBModel);
     }
 
     /**
@@ -70,6 +141,11 @@ public class MainView extends javax.swing.JFrame {
             }
         ));
         tblBook.getTableHeader().setReorderingAllowed(false);
+        tblBook.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblBookMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tblBook);
 
         jLabel2.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
@@ -80,6 +156,11 @@ public class MainView extends javax.swing.JFrame {
 
         btnSearchByName.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         btnSearchByName.setText("Search by name");
+        btnSearchByName.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSearchByNameActionPerformed(evt);
+            }
+        });
 
         txtSearchByName.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
 
@@ -145,22 +226,40 @@ public class MainView extends javax.swing.JFrame {
         lblPublishedYear.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         lblPublishedYear.setText("Published year:");
 
-        cbbPublishedYear.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
         cbForRent.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         cbForRent.setText("For rent");
 
         btnAddNew.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         btnAddNew.setText("Add new");
+        btnAddNew.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddNewActionPerformed(evt);
+            }
+        });
 
         btnSave.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         btnSave.setText("Save");
+        btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveActionPerformed(evt);
+            }
+        });
 
         btnRemove.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         btnRemove.setText("Remove");
+        btnRemove.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRemoveActionPerformed(evt);
+            }
+        });
 
         btnFindByID.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         btnFindByID.setText("Find by ID");
+        btnFindByID.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnFindByIDActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout detailedPartLayout = new javax.swing.GroupLayout(detailedPart);
         detailedPart.setLayout(detailedPartLayout);
@@ -275,6 +374,233 @@ public class MainView extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnAddNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddNewActionPerformed
+        // TODO add your handling code here:
+        addOrUpdateStatus = true;
+        txtBookID.setText("");
+        txtBookID.setEditable(true);
+        txtBookName.setText("");
+        txtAuthor.setText("");
+        txtPublisher.setText("");
+        cbbPublishedYear.setSelectedIndex(0);
+        cbForRent.setSelected(false);
+
+    }//GEN-LAST:event_btnAddNewActionPerformed
+
+    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
+        // TODO add your handling code here:
+        boolean invalid = false;
+        String errorMess = "";
+
+        String bookID = txtBookID.getText();
+        String bookName = txtBookName.getText();
+        String author = txtAuthor.getText();
+        String publisher = txtPublisher.getText();
+        int publishedYear = (int) cbbPublishedYear.getSelectedItem();
+        boolean forRent = cbForRent.isSelected();
+        //check id
+        if (bookID.isEmpty() || bookID.length() > 10 || !bookID.matches(Constants.ID_REGEX)) {
+            invalid = true;
+            errorMess = "BookID: max length is 10, not contains special characters";
+        }
+        //check name
+        if (bookName.isEmpty() || bookName.length() > 50) {
+            invalid = true;
+            errorMess = "BookName: max length is 50";
+        }
+        //check author
+        if (author.isEmpty() || author.length() > 50) {
+            invalid = true;
+            errorMess = "Author: max length is 50";
+        }
+        //check publisher
+        if (publisher.isEmpty() || publisher.length() > 50) {
+            invalid = true;
+            errorMess = "Publisher: max length is 50";
+        }
+
+        if (invalid) {
+            JOptionPane.showMessageDialog(this, errorMess);
+        } else {
+            if (addOrUpdateStatus) { //add method
+                try {
+                    if (BookDAO.checkExistBook(bookID)) {
+                        JOptionPane.showMessageDialog(this, "This book has been existed!");
+                    } else {
+                        BookDTO newBook = new BookDTO(bookID, bookName, author, publisher, publishedYear, forRent);
+                        boolean addStatus = BookDAO.createBook(newBook);
+                        if (addStatus) {
+                            JOptionPane.showMessageDialog(this, "Add Succeed!");
+                            getAllBook(BookDAO.bookList);
+                            tblBook.updateUI();
+                            txtBookID.setText("");
+                            txtBookID.setEditable(true);
+                            txtBookName.setText("");
+                            txtAuthor.setText("");
+                            txtPublisher.setText("");
+                            cbbPublishedYear.setSelectedIndex(0);
+                            cbForRent.setSelected(false);
+                        } else {
+                            JOptionPane.showMessageDialog(this, "Add Failed");
+
+                        }
+
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Cannot Add...");
+                }
+            } else { //save method
+                try {
+
+                    BookDTO updateBook = new BookDTO(bookID, bookName, author, publisher, publishedYear, forRent);
+                    boolean updateStatus = BookDAO.updateBook(updateBook);
+                    if (updateStatus) {
+                        JOptionPane.showMessageDialog(this, "Update Succeed!");
+                        getAllBook(BookDAO.bookList);
+                        tblBook.updateUI();
+                        txtBookID.setText("");
+                        txtBookID.setEditable(true);
+                        txtBookName.setText("");
+                        txtAuthor.setText("");
+                        txtPublisher.setText("");
+                        cbbPublishedYear.setSelectedIndex(0);
+                        cbForRent.setSelected(false);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Update Failed!");
+
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Cannot Update...");
+                }
+            }
+        }
+    }//GEN-LAST:event_btnSaveActionPerformed
+
+    private void btnRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveActionPerformed
+        // TODO add your handling code here:
+        String id = txtBookID.getText();
+        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure to remove this book?");
+        if (confirm == JOptionPane.OK_OPTION) {
+            if (id.isEmpty()) {
+                JOptionPane.showMessageDialog(rootPane, "Nothing to remove!");
+            } else {
+                try {
+
+                    boolean removeStatus = BookDAO.removeBook(id);
+                    if (removeStatus) {
+                        JOptionPane.showMessageDialog(this, "Remove Succeed!");
+                        getAllBook(BookDAO.bookList);
+                        tblBook.updateUI();
+                        txtBookID.setText("");
+                        txtBookID.setEditable(true);
+                        txtBookName.setText("");
+                        txtAuthor.setText("");
+                        txtPublisher.setText("");
+                        cbbPublishedYear.setSelectedIndex(0);
+                        cbForRent.setSelected(false);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Remove Failed!");
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Cannot delete...");
+
+                }
+            }
+        }
+
+    }//GEN-LAST:event_btnRemoveActionPerformed
+
+    private void tblBookMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblBookMouseClicked
+        // TODO add your handling code here:
+        addOrUpdateStatus = false;
+        int selectedRow = tblBook.getSelectedRow();
+        try {
+
+            txtBookID.setText((String) tblBook.getValueAt(selectedRow, 0));
+            txtBookID.setEditable(false);
+            txtBookName.setText((String) tblBook.getValueAt(selectedRow, 1));
+            txtAuthor.setText((String) tblBook.getValueAt(selectedRow, 2));
+            txtPublisher.setText((String) tblBook.getValueAt(selectedRow, 3));
+            cbbPublishedYear.setSelectedItem(tblBook.getValueAt(selectedRow, 4));
+            cbForRent.setSelected((Boolean) tblBook.getValueAt(selectedRow, 5));
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error while selecting row...");
+        }
+    }//GEN-LAST:event_tblBookMouseClicked
+
+    private void btnFindByIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFindByIDActionPerformed
+        // TODO add your handling code here:
+        String id = txtBookID.getText();
+        if (id.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Cannot find this ID!");
+        } else {
+            try {
+                BookDTO foundBook = BookDAO.findBookById(id);
+
+                if (foundBook.getBookID() == null) {
+                    JOptionPane.showMessageDialog(this, "This book does not exist!");
+                } else {
+                    txtBookID.setText(foundBook.getBookID());
+                    txtBookID.setEditable(false);
+                    txtBookName.setText(foundBook.getBookName());
+                    txtAuthor.setText(foundBook.getAuthor());
+                    txtPublisher.setText(foundBook.getPublisher());
+                    cbbPublishedYear.setSelectedItem(foundBook.getPublishedYear());
+                    cbForRent.setSelected(foundBook.isForRent());
+                }
+            } catch (Exception e) {
+
+                JOptionPane.showMessageDialog(this, "Error while finding id...");
+            }
+        }
+    }//GEN-LAST:event_btnFindByIDActionPerformed
+
+    private void btnSearchByNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchByNameActionPerformed
+        // TODO add your handling code here:
+        String searchName = txtSearchByName.getText();
+        if (searchName.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Nothing to search!");
+        } else {
+            tblSearchBookModel = new DefaultTableModel(new String[]{"Book ID", "Book Name", "Author", "Publisher", "Published Year", "For Rent"}, 0) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false; // or a condition at your choice with row and column
+                }
+            };
+            try {
+                ArrayList<BookDTO> searchBookList = BookDAO.searchBookByName(searchName);
+                for (BookDTO bookDTO : searchBookList) {
+                    Vector searchBookData = new Vector();
+                    String id = bookDTO.getBookID();
+                    String bookName = bookDTO.getBookName();
+                    String author = bookDTO.getAuthor();
+                    String publisher = bookDTO.getPublisher();
+                    int publishedYear = bookDTO.getPublishedYear();
+                    boolean forRent = bookDTO.isForRent();
+                    searchBookData.add(id);
+                    searchBookData.add(bookName);
+                    searchBookData.add(author);
+                    searchBookData.add(publisher);
+                    searchBookData.add(publishedYear);
+                    searchBookData.add(forRent);
+                    tblSearchBookModel.addRow(searchBookData);
+                }
+                tblBook.setModel(tblSearchBookModel);
+                tblBook.updateUI();
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error while searching...");
+            }
+        }
+    }//GEN-LAST:event_btnSearchByNameActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -286,7 +612,7 @@ public class MainView extends javax.swing.JFrame {
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
+                if ("Windows".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
@@ -305,7 +631,9 @@ public class MainView extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainView().setVisible(true);
+                MainView mainView = new MainView();
+                mainView.setVisible(true);
+                mainView.setLocationRelativeTo(null);
             }
         });
     }
