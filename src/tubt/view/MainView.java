@@ -27,6 +27,12 @@ public class MainView extends javax.swing.JFrame {
      * Creates new form MainView
      */
     DefaultTableModel tblBookModel;
+    DefaultTableModel tblDefaultModel = new DefaultTableModel(new String[]{"Book ID", "Book Name", "Author", "Publisher", "Published Year", "For Rent"}, 0) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false; // or a condition at your choice with row and column
+        }
+    };
     DefaultTableModel tblSearchBookModel;
     DefaultComboBoxModel defaultCBBModel = new DefaultComboBoxModel();
     boolean addOrUpdateStatus = false;
@@ -55,6 +61,8 @@ public class MainView extends javax.swing.JFrame {
 
     private void getAllBook(ArrayList<BookDTO> bookList) {
         if (bookList.isEmpty()) {
+            tblBook.setModel(tblDefaultModel);
+            tblBook.updateUI();
             JOptionPane.showMessageDialog(this, "No book in list!");
         } else {
             tblBookModel.getDataVector().removeAllElements();
@@ -83,9 +91,8 @@ public class MainView extends javax.swing.JFrame {
     private void setPublishedYearForCBB() {
         LocalDate date = LocalDate.now();
         int thisYear = date.getYear();
-        System.out.println(thisYear);
 
-        for (int i = 1900; i <= thisYear; i++) {
+        for (int i = 1900; i < thisYear; i++) {
             defaultCBBModel.addElement(i);
         }
         cbbPublishedYear.setModel(defaultCBBModel);
@@ -460,7 +467,7 @@ public class MainView extends javax.swing.JFrame {
                     }
 
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    
                     JOptionPane.showMessageDialog(this, "Cannot Add...");
                 }
             } else { //save method
@@ -485,7 +492,7 @@ public class MainView extends javax.swing.JFrame {
                     }
 
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    
                     JOptionPane.showMessageDialog(this, "Cannot Update...");
                 }
             }
@@ -542,13 +549,14 @@ public class MainView extends javax.swing.JFrame {
             cbbPublishedYear.setSelectedItem(tblBook.getValueAt(selectedRow, 4));
             cbForRent.setSelected((Boolean) tblBook.getValueAt(selectedRow, 5));
         } catch (Exception e) {
-            e.printStackTrace();
+            
             JOptionPane.showMessageDialog(this, "Error while selecting row...");
         }
     }//GEN-LAST:event_tblBookMouseClicked
 
     private void btnFindByIDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFindByIDActionPerformed
         // TODO add your handling code here:
+        addOrUpdateStatus = false;
         String id = txtBookID.getText();
         if (id.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Cannot find this ID!");
@@ -588,26 +596,31 @@ public class MainView extends javax.swing.JFrame {
             };
             try {
                 ArrayList<BookDTO> searchBookList = BookDAO.searchBookByName(searchName);
-                for (BookDTO bookDTO : searchBookList) {
-                    Vector searchBookData = new Vector();
-                    String id = bookDTO.getBookID();
-                    String bookName = bookDTO.getBookName();
-                    String author = bookDTO.getAuthor();
-                    String publisher = bookDTO.getPublisher();
-                    int publishedYear = bookDTO.getPublishedYear();
-                    boolean forRent = bookDTO.isForRent();
-                    searchBookData.add(id);
-                    searchBookData.add(bookName);
-                    searchBookData.add(author);
-                    searchBookData.add(publisher);
-                    searchBookData.add(publishedYear);
-                    searchBookData.add(forRent);
-                    tblSearchBookModel.addRow(searchBookData);
+                if (searchBookList.size() == 0) {
+                    JOptionPane.showMessageDialog(this, "Not found any book!");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Found " + searchBookList.size() + " book(s)!");
+                    for (BookDTO bookDTO : searchBookList) {
+                        Vector searchBookData = new Vector();
+                        String id = bookDTO.getBookID();
+                        String bookName = bookDTO.getBookName();
+                        String author = bookDTO.getAuthor();
+                        String publisher = bookDTO.getPublisher();
+                        int publishedYear = bookDTO.getPublishedYear();
+                        boolean forRent = bookDTO.isForRent();
+                        searchBookData.add(id);
+                        searchBookData.add(bookName);
+                        searchBookData.add(author);
+                        searchBookData.add(publisher);
+                        searchBookData.add(publishedYear);
+                        searchBookData.add(forRent);
+                        tblSearchBookModel.addRow(searchBookData);
+                    }
+                    tblBook.setModel(tblSearchBookModel);
+                    tblBook.updateUI();
                 }
-                tblBook.setModel(tblSearchBookModel);
-                tblBook.updateUI();
             } catch (Exception e) {
-                e.printStackTrace();
+                
                 JOptionPane.showMessageDialog(this, "Error while searching...");
             }
         }
@@ -641,7 +654,7 @@ public class MainView extends javax.swing.JFrame {
                     cbbPublishedYear.setSelectedIndex(0);
                     cbForRent.setSelected(false);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    
                     JOptionPane.showMessageDialog(rootPane, "Error while ascending sorting...");
                 }
             } else if (sortBySelected.equals("Descending")) {
@@ -655,7 +668,6 @@ public class MainView extends javax.swing.JFrame {
                     cbbPublishedYear.setSelectedIndex(0);
                     cbForRent.setSelected(false);
                 } catch (Exception e) {
-                    e.printStackTrace();
                     JOptionPane.showMessageDialog(this, "Error while descending sorting...");
                 }
             }
