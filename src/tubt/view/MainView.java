@@ -7,6 +7,8 @@ package tubt.view;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
@@ -152,7 +154,12 @@ public class MainView extends javax.swing.JFrame {
         jLabel2.setText("Sort by name:");
 
         cbbSortBy.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        cbbSortBy.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Ascending", "Descending", " " }));
+        cbbSortBy.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Ascending", "Descending" }));
+        cbbSortBy.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbbSortByActionPerformed(evt);
+            }
+        });
 
         btnSearchByName.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         btnSearchByName.setText("Search by name");
@@ -166,6 +173,11 @@ public class MainView extends javax.swing.JFrame {
 
         btnGetAllBook.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         btnGetAllBook.setText("Get all Book");
+        btnGetAllBook.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnGetAllBookActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout mainPartLayout = new javax.swing.GroupLayout(mainPart);
         mainPart.setLayout(mainPartLayout);
@@ -600,6 +612,111 @@ public class MainView extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_btnSearchByNameActionPerformed
+
+    private void btnGetAllBookActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGetAllBookActionPerformed
+        // TODO add your handling code here:
+        if (BookDAO.bookList.size() == 0) {
+            JOptionPane.showMessageDialog(this, "No book in list!");;
+        } else {
+            getAllBook(BookDAO.bookList);
+            tblBook.setModel(tblBookModel);
+            tblBook.updateUI();
+        }
+    }//GEN-LAST:event_btnGetAllBookActionPerformed
+
+    private void cbbSortByActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbbSortByActionPerformed
+        // TODO add your handling code here:
+        String sortBySelected = cbbSortBy.getSelectedItem().toString();
+        if (BookDAO.bookList.size() == 0) {
+            JOptionPane.showMessageDialog(this, "No book to sort!");
+        } else {
+            if (sortBySelected.equals("Ascending")) {
+                try {
+                    sortAscendingByBookName(BookDAO.bookList);
+                    txtBookID.setText("");
+                    txtBookID.setEditable(true);
+                    txtBookName.setText("");
+                    txtAuthor.setText("");
+                    txtPublisher.setText("");
+                    cbbPublishedYear.setSelectedIndex(0);
+                    cbForRent.setSelected(false);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(rootPane, "Error while ascending sorting...");
+                }
+            } else if (sortBySelected.equals("Descending")) {
+                try {
+                    sortDescendingByBookName(BookDAO.bookList);
+                    txtBookID.setText("");
+                    txtBookID.setEditable(true);
+                    txtBookName.setText("");
+                    txtAuthor.setText("");
+                    txtPublisher.setText("");
+                    cbbPublishedYear.setSelectedIndex(0);
+                    cbForRent.setSelected(false);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Error while descending sorting...");
+                }
+            }
+        }
+    }//GEN-LAST:event_cbbSortByActionPerformed
+
+    private void sortAscendingByBookName(ArrayList<BookDTO> bookList) throws Exception {
+        Collections.sort(bookList, new Comparator<BookDTO>() {
+            @Override
+            public int compare(BookDTO o1, BookDTO o2) {
+                return o1.getBookName().compareTo(o2.getBookName());
+            }
+        });
+        tblBookModel.setRowCount(0);
+        for (BookDTO bookDTO : bookList) {
+            Vector bookData = new Vector();
+            String id = bookDTO.getBookID();
+            String bookName = bookDTO.getBookName();
+            String author = bookDTO.getAuthor();
+            String publisher = bookDTO.getPublisher();
+            int publishedYear = bookDTO.getPublishedYear();
+            boolean forRent = bookDTO.isForRent();
+            bookData.add(id);
+            bookData.add(bookName);
+            bookData.add(author);
+            bookData.add(publisher);
+            bookData.add(publishedYear);
+            bookData.add(forRent);
+            tblBookModel.addRow(bookData);
+        }
+        tblBook.setModel(tblBookModel);
+        tblBook.updateUI();
+    }
+
+    private void sortDescendingByBookName(ArrayList<BookDTO> bookList) throws Exception {
+        Collections.sort(bookList, new Comparator<BookDTO>() {
+            @Override
+            public int compare(BookDTO o1, BookDTO o2) {
+                return o2.getBookName().compareTo(o1.getBookName());
+            }
+        });
+        tblBookModel.setRowCount(0);
+        for (BookDTO bookDTO : bookList) {
+            Vector bookData = new Vector();
+            String id = bookDTO.getBookID();
+            String bookName = bookDTO.getBookName();
+            String author = bookDTO.getAuthor();
+            String publisher = bookDTO.getPublisher();
+            int publishedYear = bookDTO.getPublishedYear();
+            boolean forRent = bookDTO.isForRent();
+            bookData.add(id);
+            bookData.add(bookName);
+            bookData.add(author);
+            bookData.add(publisher);
+            bookData.add(publishedYear);
+            bookData.add(forRent);
+            tblBookModel.addRow(bookData);
+        }
+        tblBook.setModel(tblBookModel);
+        tblBook.updateUI();
+    }
 
     /**
      * @param args the command line arguments
